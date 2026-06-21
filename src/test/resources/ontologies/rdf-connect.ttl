@@ -1,0 +1,155 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix prov: <http://www.w3.org/ns/prov#>.
+@prefix cc: <http://creativecommons.org/ns#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix rdfc: <https://w3id.org/rdf-connect#>.
+
+#################################################################
+# Ontology metadata
+#################################################################
+<https://w3id.org/rdf-connect/ontology> a owl:Ontology;
+  cc:license <https://creativecommons.org/licenses/by/4.0/>;
+  dct:author [
+    a foaf:Person;
+    foaf:name "Arthur Vercruysse";
+  ];
+  dct:contributor [
+    a foaf:Person;
+    foaf:name "Jens Pots";
+  ],
+    <https://julianrojas.org/#me>,
+    <https://pietercolpaert.be/#me>,
+    <https://smessaert.be/#me>;
+  dct:issued "2024-07-29"^^xsd:date;
+  dct:modified "2025-09-02"^^xsd:date;
+  rdfs:label "RDF Connect Ontology"@en;
+  rdfs:comment "An ontology for describing programming language-specific runners, processors and pipelines in RDF-based data processing frameworks."@en;
+  owl:versionInfo "0.2.1".
+
+#################################################################
+# Classes
+#################################################################
+rdfc:Processor a owl:Class;
+  rdfs:subClassOf prov:Activity;
+  rdfs:label "Processor"@en;
+  rdfs:comment "A processing unit that performs an action within a pipeline."@en.
+
+rdfc:Runner a owl:Class;
+  rdfs:subClassOf prov:SoftwareAgent;
+  rdfs:label "Runner"@en;
+  rdfs:comment "An agent responsible for executing processors based on specific implementations."@en.
+
+rdfc:Pipeline a owl:Class;
+  rdfs:subClassOf prov:Entity;
+  rdfs:label "Pipeline"@en;
+  rdfs:comment "A sequence of processors and runners forming a data processing workflow."@en.
+
+rdfc:ExecutionContext a owl:Class;
+  rdfs:label "Execution Context"@en;
+  rdfs:comment "Entity that defines an execution context used by a pipeline, which is composed by a runner and a set of processor instances."@en.
+
+rdfc:Reader a owl:Class;
+  rdfs:label "Reader"@en;
+  rdfs:comment "A component that provides input data to a processor."@en.
+
+rdfc:Writer a owl:Class;
+  rdfs:label "Writer"@en;
+  rdfs:comment "A component that handles output data from a processor."@en.
+
+rdfc:CommandRunner a owl:Class;
+  rdfs:subClassOf rdfc:Runner;
+  rdfs:label "Command Runner"@en;
+  rdfs:comment "A runner that executes processors via shell commands."@en.
+
+#################################################################
+# Properties
+#################################################################
+rdfc:implementationOf a owl:ObjectProperty;
+  rdfs:subPropertyOf rdfs:subClassOf;
+  rdfs:label "implementation of"@en;
+  rdfs:comment "Abstract property that conveys the implementation language of a processor."@en;
+  rdfs:domain rdfc:Processor;
+  rdfs:range rdfc:Processor.
+
+rdfc:handlesSubjectsOf a owl:ObjectProperty;
+  rdfs:label "handle subjects of"@en;
+  rdfs:comment "The property that defines which type of processors a runner can handle, typically linked to a specific implementation property."@en;
+  rdfs:domain rdfc:Runner.
+
+rdfc:consistsOf a owl:ObjectProperty;
+  rdfs:label "consists of"@en;
+  rdfs:comment "Relates a pipeline to an execution context (runner and processors) it uses."@en;
+  rdfs:domain rdfc:Pipeline;
+  rdfs:range rdfc:ExecutionContext.
+
+rdfc:instantiates a owl:ObjectProperty;
+  rdfs:label "instantiates"@en;
+  rdfs:comment "Declares the runner instance used in an execution context."@en;
+  rdfs:domain rdfc:ExecutionContext;
+  rdfs:range rdfc:Runner.
+
+rdfc:processor a owl:ObjectProperty;
+  rdfs:label "processor"@en;
+  rdfs:comment "Declares a processor instance used in an execution context, part of a pipeline."@en;
+  rdfs:domain rdfc:ExecutionContext;
+  rdfs:range rdfc:Processor.
+
+rdfc:command a owl:DatatypeProperty;
+  rdfs:label "command"@en;
+  rdfs:comment "Shell command used by an orchestrator to execute a runner instance."@en;
+  rdfs:range xsd:string.
+
+rdfc:class a owl:DatatypeProperty;
+  rdfs:label "class"@en;
+  rdfs:comment "The class name of a processor. Applicable for any object-oriented programming language."@en;
+  rdfs:range xsd:string.
+
+#################################################################
+# JavaScript-specific Properties
+#################################################################
+
+rdfc:jsImplementationOf a owl:ObjectProperty;
+  rdfs:label "JavaScript Implementation Of"@en;
+  rdfs:comment "Indicates that a processor is implemented in JavaScript and is a specialization of implementationOf."@en;
+  rdfs:subPropertyOf rdfc:implementationOf.
+
+rdfc:entrypoint a owl:DatatypeProperty;
+  rdfs:label "entrypoint"@en;
+  rdfs:comment "The folder location of the main script or module entry point of a JavaScript processor."@en;
+  rdfs:range xsd:anyURI.
+
+rdfc:file a owl:DatatypeProperty;
+  rdfs:label "file"@en;
+  rdfs:comment "The file name containing the processor logic of a JavaScript processor."@en;
+  rdfs:range xsd:anyURI.
+
+#################################################################
+# Java-specific Properties
+#################################################################
+
+rdfc:javaImplementationOf a owl:ObjectProperty;
+  rdfs:label "Java Implementation Of"@en;
+  rdfs:comment "Indicates that a processor is implemented in Java and is a specialization of implementationOf."@en;
+  rdfs:subPropertyOf rdfc:implementationOf.
+
+rdfc:jar a owl:DatatypeProperty;
+  rdfs:label "jar"@en;
+  rdfs:comment "Path to the JAR file containing the processor logic of a Java processor."@en;
+  rdfs:range xsd:anyURI.
+
+#################################################################
+# Python-specific Properties
+#################################################################
+
+rdfc:pyImplementationOf a owl:ObjectProperty;
+  rdfs:label "Python Implementation Of"@en;
+  rdfs:comment "Indicates that a processor is implemented in Python and is a specialization of implementationOf."@en;
+  rdfs:subPropertyOf rdfc:implementationOf.
+
+rdfc:module_path a owl:DatatypeProperty;
+  rdfs:label "module path"@en;
+  rdfs:comment "The module path of a processor implemented in Python."@en;
+  rdfs:range xsd:string.
