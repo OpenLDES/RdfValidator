@@ -1,0 +1,18 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex:   <http://example.org/skos/> .
+@prefix ext:  <http://external.org/skos/> .
+
+ex:dog     a skos:Concept .
+ext:canine a skos:Concept .
+ext:feline a skos:Concept .
+
+ex:dog     skos:exactMatch ext:canine .
+ext:canine skos:exactMatch ext:feline .
+
+ex:mammal  a skos:Concept .
+ex:animal  a skos:Concept .
+ex:mammal  skos:broadMatch ex:animal .
+
+ex:running a skos:Concept .
+ex:jogging a skos:Concept .
+ex:running skos:relatedMatch ex:jogging .

@@ -1,0 +1,13 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# S14: a concept may have at most one skos:prefLabel per language tag.
+# OWL cannot express per-language uniqueness; sh:uniqueLang has no OWL equivalent.
+<#SKOSPrefLabelUniqueLang>
+    a sh:NodeShape ;
+    sh:targetClass skos:Concept ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:uniqueLang true ;
+        sh:message "S14: A concept may have at most one skos:prefLabel per language tag." ;
+    ] .

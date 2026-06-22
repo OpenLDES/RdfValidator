@@ -1,0 +1,8 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex:   <http://example.org/skos/> .
+
+ex:scheme a skos:ConceptScheme .
+
+ex:animal a skos:Concept ; skos:inScheme ex:scheme .
+ex:mammal a skos:Concept ; skos:inScheme ex:scheme ; skos:broader ex:animal .
+ex:dog    a skos:Concept ; skos:inScheme ex:scheme ; skos:broader ex:mammal .

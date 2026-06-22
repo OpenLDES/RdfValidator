@@ -1,0 +1,16 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# S13: skos:prefLabel, skos:altLabel, skos:hiddenLabel are pairwise disjoint
+skos:prefLabel owl:propertyDisjointWith skos:altLabel .
+skos:prefLabel owl:propertyDisjointWith skos:hiddenLabel .
+skos:altLabel  owl:propertyDisjointWith skos:hiddenLabel .
+
+# S27: skos:related is disjoint with skos:broader and skos:narrower
+# (Checks direct broader/narrower; broaderTransitive requires subPropertyOf in SHACL inference.)
+skos:related owl:propertyDisjointWith skos:broader .
+skos:related owl:propertyDisjointWith skos:narrower .
+
+# S46: skos:exactMatch is disjoint with skos:broadMatch and skos:relatedMatch
+skos:exactMatch owl:propertyDisjointWith skos:broadMatch .
+skos:exactMatch owl:propertyDisjointWith skos:relatedMatch .
