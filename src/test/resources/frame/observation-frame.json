@@ -1,0 +1,11 @@
+{
+  "@context": {
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "qudt": "http://qudt.org/schema/qudt/"
+  },
+  "@type": "sosa:Observation",
+  "sosa:hasFeatureOfInterest": {},
+  "sosa:observedProperty": {},
+  "sosa:madeBySensor": {},
+  "sosa:hasResult": {}
+}

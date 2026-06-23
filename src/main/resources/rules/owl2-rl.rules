@@ -1,0 +1,33 @@
+# RDFS domain inference: if ?p has rdfs:domain ?c, and ?x uses ?p, then ?x is of type ?c
+[domainRule: (?p rdfs:domain ?c), (?x ?p ?y) -> (?x rdf:type ?c)]
+
+# RDFS range inference: if ?p has rdfs:range ?c, and ?p is used with value ?y, then ?y is of type ?c
+[rangeRule: (?p rdfs:range ?c), (?x ?p ?y) -> (?y rdf:type ?c)]
+
+# rdfs:subPropertyOf: use of ?p also implies use of the superproperty ?q
+[subPropertyRule: (?p rdfs:subPropertyOf ?q), (?x ?p ?y) -> (?x ?q ?y)]
+
+# rdfs:subClassOf: an instance of a subclass is also an instance of the superclass
+[subClassRule: (?y rdfs:subClassOf ?z), (?x rdf:type ?y) -> (?x rdf:type ?z)]
+
+# owl:inverseOf: if ?p is the inverse of ?q, the relation holds in both directions
+[inversePropertyRule:  (?p owl:inverseOf ?q), (?x ?p ?y) -> (?y ?q ?x)]
+[inversePropertyRule2: (?p owl:inverseOf ?q), (?x ?q ?y) -> (?y ?p ?x)]
+
+# owl:equivalentClass: bidirectional subClassOf (OWL 2 RL cax-eqc1 / cax-eqc2)
+# isURI guards: tests use full ontology as schema; some ontologies have owl:equivalentClass
+# with blank-node objects (OWL restrictions). In production, extractStructuralSubset
+# already filters these out — guards are redundant there but harmless.
+[equivalentClassRule1: (?c1 owl:equivalentClass ?c2), notBNode(?c1), notBNode(?c2), (?x rdf:type ?c1) -> (?x rdf:type ?c2)]
+[equivalentClassRule2: (?c1 owl:equivalentClass ?c2), notBNode(?c1), notBNode(?c2), (?x rdf:type ?c2) -> (?x rdf:type ?c1)]
+
+# owl:equivalentProperty: bidirectional subPropertyOf (OWL 2 RL prp-eqp1 / prp-eqp2)
+# Same rationale for isURI guards as above.
+[equivalentPropertyRule1: (?p owl:equivalentProperty ?q), notBNode(?p), notBNode(?q), (?x ?p ?y) -> (?x ?q ?y)]
+[equivalentPropertyRule2: (?p owl:equivalentProperty ?q), notBNode(?p), notBNode(?q), (?x ?q ?y) -> (?x ?p ?y)]
+
+# owl:SymmetricProperty: symmetric properties hold in both directions (OWL 2 RL prp-symp)
+[symmetricPropertyRule: (?p rdf:type owl:SymmetricProperty), (?x ?p ?y) -> (?y ?p ?x)]
+
+# owl:TransitiveProperty: transitive chains (OWL 2 RL prp-trp)
+[transitivePropertyRule: (?p rdf:type owl:TransitiveProperty), (?x ?p ?y), (?y ?p ?z) -> (?x ?p ?z)]

@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Java implementation of an Open Linked Data Event Stream</description>
+    <url>https://github.com/OpenLDES/RdfValidator</url>
+
+    <groupId>org.openldes</groupId>
+    <artifactId>rdf-validator</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+
+    <properties>
+        <commons-codec.version>1.15</commons-codec.version>
+        <commons-io.version>2.14.0</commons-io.version>
+        <jackson.version>2.15.2</jackson.version>
+        <java.version>21</java.version>
+        <jena.version>4.10.0</jena.version>
+        <jsonld.version>0.13.3</jsonld.version>
+        <jsonpath.version>2.9.0</jsonpath.version>
+        <json-smart.version>2.5.2</json-smart.version>
+        <junit-jupiter.version>5.10.1</junit-jupiter.version>
+        <libthrift.version>0.23.0</libthrift.version>
+        <logback.version>1.4.12</logback.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <protobuf.version>3.25.5</protobuf.version>
+        <rdf4j.version>4.2.1</rdf4j.version>
+        <scala.compat.version>2.12</scala.compat.version>
+        <scala-maven-plugin.version>4.9.2</scala-maven-plugin.version>
+        <scala.modules.version>2.12.0</scala.modules.version>
+        <scalatest-maven-plugin.version>2.2.0</scalatest-maven-plugin.version>
+        <scalatest.version>3.2.18</scalatest.version>
+        <scala.version>2.12.18</scala.version>
+        <slf4j.version>1.7.30</slf4j.version>
+    </properties>
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-collection-compat_2.12</artifactId>
+            <version>${scala.modules.version}</version>
+        </dependency>
+
+        <!-- Apache Jena (RDF / SHACL / SPARQL) -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>apache-jena-libs</artifactId>
+            <type>pom</type>
+            <version>${jena.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-to-slf4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-slf4j-impl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- JSON-LD -->
+        <dependency>
+            <groupId>com.github.jsonld-java</groupId>
+            <artifactId>jsonld-java</artifactId>
+            <version>${jsonld.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-scala_2.12</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- JSON querying -->
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${jsonpath.version}</version>
+        </dependency>
+
+        <!-- RDF4J -->
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-model</artifactId>
+            <version>${rdf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-rio-api</artifactId>
+            <version>${rdf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-rio-turtle</artifactId>
+            <version>${rdf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-rio-jsonld</artifactId>
+            <version>${rdf4j.version}</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
+        <!-- commons-codec >= 1.13 required by Jena's BlankNodeAllocatorHash (MurmurHash3) -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.compat.version}</artifactId>
+            <version>${scalatest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <!-- Trivy -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${json-smart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${libthrift.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>${scala-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <args>
+                        <arg>-deprecation</arg>
+                        <arg>-feature</arg>
+                    </args>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>${scalatest-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <scm>
+        <connection>scm:git:${project.scm.url}</connection>
+        <developerConnection>scm:git:${project.scm.url}</developerConnection>
+        <url>git@github.com:openldes/RdfValidator.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/OpenLDES/RdfValidator</url>
+        </repository>
+    </distributionManagement>
+
+    <profiles>
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.15</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <formats>
+                                        <format>XML</format>
+                                    </formats>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

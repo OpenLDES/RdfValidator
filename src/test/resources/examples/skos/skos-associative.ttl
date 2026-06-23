@@ -1,0 +1,6 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex:   <http://example.org/skos/> .
+
+ex:swimming a skos:Concept .
+ex:diving   a skos:Concept .
+ex:swimming skos:related ex:diving .
