@@ -8,6 +8,7 @@ import org.apache.jena.rdf.model.{Model, ModelFactory, RDFNode, ResourceFactory}
 import org.apache.jena.reasoner.rulesys.GenericRuleReasoner
 import org.apache.jena.reasoner.Reasoner
 import org.apache.jena.riot.{Lang, RDFParser}
+import org.apache.jena.shared.PrefixMapping
 import org.apache.jena.vocabulary.{OWL, RDF}
 
 import java.io._
@@ -43,10 +44,12 @@ object RdfUtils {
    */
   def parseTurtle(file: File): Model = {
     val model = ModelFactory.createDefaultModel()
-    RDFParser.create()
-      .source(new FileInputStream(file))
-      .lang(Lang.TTL)
-      .parse(model)
+    Using.resource(new FileInputStream(file)) { stream =>
+      RDFParser.create()
+        .source(stream)
+        .lang(Lang.TTL)
+        .parse(model)
+    }
     model
   }
 
@@ -59,10 +62,12 @@ object RdfUtils {
    */
   def parseJsonLd(file: File): Model = {
     val model = ModelFactory.createDefaultModel()
-    RDFParser.create()
-      .source(new FileInputStream(file))
-      .lang(Lang.JSONLD)
-      .parse(model)
+    Using.resource(new FileInputStream(file)) { stream =>
+      RDFParser.create()
+        .source(stream)
+        .lang(Lang.JSONLD)
+        .parse(model)
+    }
     model
   }
 
@@ -149,7 +154,7 @@ object RdfUtils {
       }
     }
 
-    ValidationResult(errors.isEmpty, errors.distinct.toSeq)
+    ValidationResult(errors.isEmpty, errors.distinct.toList)
   }
 
   /**
@@ -186,7 +191,7 @@ object RdfUtils {
         }
       }
 
-    ValidationResult(errors.isEmpty, errors.toSeq)
+    ValidationResult(errors.isEmpty, errors.toList)
   }
 
   /**
@@ -224,7 +229,7 @@ object RdfUtils {
         }
       }
 
-    ValidationResult(errors.isEmpty, errors.toSeq)
+    ValidationResult(errors.isEmpty, errors.toList)
   }
 
   /**
@@ -316,6 +321,17 @@ object RdfUtils {
     val rdfTypeUri   = RDF.`type`.getURI
     val xsdStringUri = "http://www.w3.org/2001/XMLSchema#string"
 
+    val prefixMapping = PrefixMapping.Factory.create()
+      .setNsPrefixes(PrefixMapping.Standard)
+      .setNsPrefixes(model)
+
+    def contextBase(uri: String): String = {
+      val prop = model.createProperty(uri)
+      Option(prefixMapping.getNsURIPrefix(prop.getNameSpace))
+        .map(p => s"${p}_${prop.getLocalName}")
+        .getOrElse(s"${prop.getLocalName}_${Integer.toHexString(Math.abs(uri.hashCode))}")
+    }
+
     model.listStatements().asScala
       .filter(_.getPredicate.getURI != rdfTypeUri)
       .toSeq
@@ -350,9 +366,12 @@ object RdfUtils {
             .flatMap(l => Option(l.getDatatypeURI)).distinct
 
           if (languages.nonEmpty && datatypes.isEmpty && uriObjects.isEmpty) {
-            // Language-tagged: one alias per language in context, full URI in frame
+            // Language-tagged: per-language aliases in context, full URI in frame.
+            // Key = prefix_localName when a namespace prefix is registered,
+            // localName_<uriHash> otherwise — guaranteed unique in both cases.
+            val base = contextBase(uri)
             languages.foreach { lang =>
-              context.putObject(s"${localName}_$lang")
+              context.putObject(s"${base}_$lang")
                 .put("@id", uri)
                 .put("@language", lang)
             }

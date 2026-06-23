@@ -92,4 +92,49 @@ class OwlToShaclGeneratorSpec extends AnyFlatSpec with Matchers {
     shacl.contains(null, shClass, null) shouldBe true
     shacl.contains(null, minCount, null) shouldBe false
   }
+
+  // --- regression: Fix 2 – blank-node union members in createOrList ---
+
+  it should "not emit sh:class for blank-node members of an owl:unionOf" in {
+    val ontology = parseTTL("""
+      @prefix owl:  <http://www.w3.org/2002/07/owl#> .
+      @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+      @prefix ex:   <http://example.org/> .
+      ex:Sensor a owl:Class ;
+        rdfs:subClassOf [
+          a owl:Restriction ;
+          owl:onProperty ex:observes ;
+          owl:someValuesFrom [
+            owl:unionOf ( ex:Temperature [ a owl:Class ] )
+          ]
+        ] .
+    """)
+    val shacl         = OwlToShaclGenerator.generate(ontology)
+    val shClass       = shacl.createProperty(SH + "class")
+    val classValues   = shacl.listStatements(null, shClass, null).asScala.toList
+    classValues.forall(_.getObject.isURIResource) shouldBe true
+  }
+
+  // --- regression: Fix 3 – duplicate sh:minCount when both owl:cardinality and owl:minCardinality are present ---
+
+  it should "emit exactly one sh:minCount when owl:cardinality and owl:minCardinality are both present" in {
+    val ontology = parseTTL("""
+      @prefix owl:  <http://www.w3.org/2002/07/owl#> .
+      @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+      @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+      @prefix ex:   <http://example.org/> .
+      ex:Observation a owl:Class ;
+        rdfs:subClassOf [
+          a owl:Restriction ;
+          owl:onProperty ex:hasResult ;
+          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+          owl:cardinality    "1"^^xsd:nonNegativeInteger ;
+        ] .
+    """)
+    val shacl    = OwlToShaclGenerator.generate(ontology)
+    val minCount = shacl.createProperty(SH + "minCount")
+    val values   = shacl.listStatements(null, minCount, null).asScala.toList
+    values should have size 1
+    values.head.getObject.asLiteral().getInt shouldBe 1
+  }
 }

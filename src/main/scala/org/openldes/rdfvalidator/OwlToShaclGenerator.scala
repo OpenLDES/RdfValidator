@@ -144,7 +144,7 @@ object OwlToShaclGenerator {
           SingleValue(v.getURI, isDatatype(v))
 
         case _ =>
-          SingleValue("__none__", false)
+          SingleValue("__none__", isDatatype = false)
       }
 
     def intValue(p: Property): Option[Int] =
@@ -219,13 +219,13 @@ object OwlToShaclGenerator {
         .map(_.getObject)
         .collect { case l: Literal => l.getInt }
 
-    intValue(OWL.minCardinality).foreach(ps.addLiteral(shaclProp("minCount", shacl), _))
-    intValue(OWL.maxCardinality).foreach(ps.addLiteral(shaclProp("maxCount", shacl), _))
+    intValue(OWL.cardinality)
+      .orElse(intValue(OWL.minCardinality))
+      .foreach(ps.addLiteral(shaclProp("minCount", shacl), _))
 
-    intValue(OWL.cardinality).foreach { exact =>
-      ps.addLiteral(shaclProp("minCount", shacl), exact)
-      ps.addLiteral(shaclProp("maxCount", shacl), exact)
-    }
+    intValue(OWL.cardinality)
+      .orElse(intValue(OWL.maxCardinality))
+      .foreach(ps.addLiteral(shaclProp("maxCount", shacl), _))
   }
 
   /**
@@ -242,11 +242,13 @@ object OwlToShaclGenerator {
         .getOrElse(unionNode)
         .as(classOf[RDFList])
 
-    val shapes = list.iterator().asScala.map { member =>
-      val ps = shacl.createResource()
-      addClassOrDatatype(ps, member.asResource(), shacl)
-      ps
-    }.toList
+    val shapes = list.iterator().asScala
+      .collect { case r: Resource if r.isURIResource => r }
+      .map { member =>
+        val ps = shacl.createResource()
+        addClassOrDatatype(ps, member, shacl)
+        ps
+      }.toList
 
     shacl.createList(shapes.iterator.asJava)
   }

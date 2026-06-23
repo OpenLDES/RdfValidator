@@ -118,7 +118,7 @@ class RdfUtilsSpec extends AnyFlatSpec with Matchers {
       ex:Alice a ex:Person .
       ex:Bob   a ex:Person .
     """)
-    val result = RdfUtils.validateModel(data, ReasonerRegistry.getOWLMiniReasoner())
+    val result = RdfUtils.validateModel(data, ReasonerRegistry.getOWLMiniReasoner)
     result.valid shouldBe true
     result.messages shouldBe empty
   }
@@ -263,8 +263,8 @@ class RdfUtilsSpec extends AnyFlatSpec with Matchers {
     """)
     val frame   = RdfUtils.deriveFrame(model)
     val context = frame.get("@context")
-    context.get("name_en").get("@id").asText() shouldBe "http://example.org/name"
-    context.get("name_en").get("@language").asText() shouldBe "en"
+    context.get("ex_name_en").get("@id").asText() shouldBe "http://example.org/name"
+    context.get("ex_name_en").get("@language").asText() shouldBe "en"
     frame.has("http://example.org/name") shouldBe true
   }
 
@@ -275,8 +275,8 @@ class RdfUtilsSpec extends AnyFlatSpec with Matchers {
     """)
     val frame   = RdfUtils.deriveFrame(model)
     val context = frame.get("@context")
-    context.has("label_en") shouldBe true
-    context.has("label_nl") shouldBe true
+    context.has("ex_label_en") shouldBe true
+    context.has("ex_label_nl") shouldBe true
     frame.get("http://example.org/label").get("@omitDefault").asBoolean() shouldBe true
   }
 
@@ -291,5 +291,71 @@ class RdfUtilsSpec extends AnyFlatSpec with Matchers {
     val graph  = RdfUtils.frameJsonLd(jsonLd, frame).flatMap(RdfUtils.extractGraph)
     graph should not be empty
     graph.get.size() shouldBe 2
+  }
+
+  // --- regression: Fix 1 – FileInputStream resource leak ---
+
+  "parseTurtle" should "not leak file descriptors across many successive calls" in {
+    val f = new File(getClass.getClassLoader.getResource("examples/Nigella-Lawson-brownies/Nigella-Lawson-Brownies.ttl").toURI)
+    noException should be thrownBy {
+      (1 to 2000).foreach(_ => RdfUtils.parseTurtle(f))
+    }
+  }
+
+  "parseJsonLd" should "load a valid JSON-LD file into a non-empty model" in {
+    val tmp = File.createTempFile("jsonld-test", ".jsonld")
+    tmp.deleteOnExit()
+    java.nio.file.Files.write(tmp.toPath,
+      """[{"@id":"http://example.org/a","@type":["http://example.org/T"]}]""".getBytes("UTF-8"))
+    RdfUtils.parseJsonLd(tmp).isEmpty shouldBe false
+  }
+
+  it should "not leak file descriptors across many successive calls" in {
+    val tmp = File.createTempFile("jsonld-leak", ".jsonld")
+    tmp.deleteOnExit()
+    java.nio.file.Files.write(tmp.toPath,
+      """[{"@id":"http://example.org/a","@type":["http://example.org/T"]}]""".getBytes("UTF-8"))
+    noException should be thrownBy {
+      (1 to 2000).foreach(_ => RdfUtils.parseJsonLd(tmp))
+    }
+  }
+
+  // --- regression: Fix 4 – local-name collision in JSON-LD context ---
+
+  "deriveFrame" should "disambiguate context aliases via namespace prefix when local names collide" in {
+    val model = parseTTL("""
+      @prefix ex1: <http://example1.org/> .
+      @prefix ex2: <http://example2.org/> .
+      ex1:Alice a ex1:Person ;
+        ex1:name "Alice"@en ;
+        ex2:name "AliceAlt"@en .
+    """)
+    val context = RdfUtils.deriveFrame(model).get("@context")
+    // Both predicates get a unique alias via their registered namespace prefix
+    context.has("ex1_name_en") shouldBe true
+    context.has("ex2_name_en") shouldBe true
+    context.get("ex1_name_en").get("@id").asText() shouldBe "http://example1.org/name"
+    context.get("ex2_name_en").get("@id").asText() shouldBe "http://example2.org/name"
+    // The ambiguous short key must not be present
+    context.has("name_en") shouldBe false
+  }
+
+  it should "use a hash-based alias when no namespace prefix is registered for a language-tagged property" in {
+    // No @prefix declarations — model has no registered prefixes for ex1/ex2
+    val model = parseTTL("""
+      <http://example1.org/Alice> a <http://example1.org/Person> ;
+        <http://example1.org/name> "Alice"@en ;
+        <http://example2.org/name> "AliceAlt"@en .
+    """)
+    val context = RdfUtils.deriveFrame(model).get("@context")
+    // Both predicates must still get an alias — derived from localName + URI hash
+    val uri1 = "http://example1.org/name"
+    val uri2 = "http://example2.org/name"
+    val key1 = s"name_${Integer.toHexString(Math.abs(uri1.hashCode))}_en"
+    val key2 = s"name_${Integer.toHexString(Math.abs(uri2.hashCode))}_en"
+    context.has(key1) shouldBe true
+    context.has(key2) shouldBe true
+    context.get(key1).get("@id").asText() shouldBe uri1
+    context.get(key2).get("@id").asText() shouldBe uri2
   }
 }
