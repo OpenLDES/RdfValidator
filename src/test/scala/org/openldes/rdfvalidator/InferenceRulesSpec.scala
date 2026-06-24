@@ -171,11 +171,31 @@ class InferenceRulesSpec extends AnyFlatSpec with Matchers {
     rules.size shouldBe 2
   }
 
-  it should "skip chains longer than 2 elements and not generate a rule" in {
+  it should "infer via a 3-element property chain" in {
+    val chain = ResourceFactory.createProperty("http://example.org/r")
     val ontology = parseTTL(
       """@prefix owl: <http://www.w3.org/2002/07/owl#> .
          @prefix ex:  <http://example.org/> .
          ex:r owl:propertyChainAxiom ( ex:p1 ex:p2 ex:p3 ) ."""
+    )
+    val data = parseTTL(
+      """@prefix ex: <http://example.org/> .
+         ex:A ex:p1 ex:B .
+         ex:B ex:p2 ex:C .
+         ex:C ex:p3 ex:D ."""
+    )
+    val chainRules = OntologySubsets.extractPropertyChainRules(ontology)
+    chainRules should not be empty
+    val reasoner = new GenericRuleReasoner(chainRules.asJava)
+    val result = RdfUtils.inferTriples(data, ontology, reasoner)
+    result.contains(res("http://example.org/A"), chain, res("http://example.org/D")) shouldBe true
+  }
+
+  it should "skip chains with fewer than 2 elements and not generate a rule" in {
+    val ontology = parseTTL(
+      """@prefix owl: <http://www.w3.org/2002/07/owl#> .
+         @prefix ex:  <http://example.org/> .
+         ex:r owl:propertyChainAxiom ( ex:p1 ) ."""
     )
     val rules = OntologySubsets.extractPropertyChainRules(ontology)
     rules shouldBe empty
