@@ -149,8 +149,7 @@ object OntologySubsets {
 
   /**
    * Transpiles `owl:propertyChainAxiom` statements from an ontology into concrete
-   * Jena Generic Rules. Only 2-element chains are supported; longer chains are skipped
-   * with a warning.
+   * Jena Generic Rules. Chains of two or more properties are supported.
    *
    * The generated rules are ground (contain actual URIs, not list traversal), which
    * avoids the need to include the blank-node RDF list structure in the inference schema.
@@ -158,7 +157,7 @@ object OntologySubsets {
    * pass the merged list to the `GenericRuleReasoner`.
    *
    * @param ontology the full OWL ontology model
-   * @return a sequence of Jena rules, one per 2-element property chain
+   * @return a sequence of Jena rules, one per property chain
    */
   def extractPropertyChainRules(ontology: Model): Seq[Rule] = {
     val rules = scala.collection.mutable.ArrayBuffer[Rule]()
@@ -171,15 +170,19 @@ object OntologySubsets {
       if (property.isURIResource && listNode.isResource) {
         try {
           val members = listNode.asResource().as(classOf[RDFList]).asJavaList().asScala
-          if (members.size == 2 && members.forall(_.isURIResource)) {
-            val p1 = members(0).asResource().getURI
-            val p2 = members(1).asResource().getURI
-            val p  = property.getURI
-            val ruleStr = s"[propertyChain_$index: (?x <$p1> ?y), (?y <$p2> ?z) -> (?x <$p> ?z)]"
+          if (members.size >= 2 && members.forall(_.isURIResource)) {
+            val props   = members.map(_.asResource().getURI)
+            val p       = property.getURI
+            val n       = props.size
+            val vars    = (0 to n).map(i => s"?v$i")
+            val body    = props.zipWithIndex.map { case (prop, i) =>
+              s"(${vars(i)} <$prop> ${vars(i + 1)})"
+            }.mkString(", ")
+            val ruleStr = s"[propertyChain_$index: $body -> (${vars(0)} <$p> ${vars(n)})]"
             rules += Rule.parseRule(ruleStr)
             index += 1
-          } else if (members.size != 2) {
-            LOG.warn(s"Skipping property chain for <${property.getURI}>: chain length ${members.size} (only 2-element chains supported)")
+          } else if (members.size < 2) {
+            LOG.warn(s"Skipping property chain for <${property.getURI}>: chain length ${members.size} (minimum 2 required)")
           }
         } catch {
           case e: Exception =>
